@@ -54,8 +54,9 @@ class JsonView extends View {
  *
  * @var string
  */
-	public $subDir = 'json';
+	public $subDir   = 'json';
 
+	public $useViews = false;
 /**
  * Constructor
  *
@@ -81,20 +82,36 @@ class JsonView extends View {
  * @return string The rendered view.
  */
 	public function render($view = null, $layout = null) {
-		if (isset($this->viewVars['_serialize'])) {
-			$serialize = $this->viewVars['_serialize'];
-			if (is_array($serialize)) {
-				$data = array();
-				foreach ($serialize as $key) {
-					$data[$key] = $this->viewVars[$key];
-				}
-			} else {
-				$data = isset($this->viewVars[$serialize]) ? $this->viewVars[$serialize] : null;
-			}
-			$content = json_encode($data);
-			$this->Blocks->set('content', $content);
-			return $content;
+		$content = $this->useViews ? $this->renderView($view, layout) : $this->encodeVars();
+		
+		if (isset($this->request->query['callback'])) {
+			$content = $this->request->query['callback'].'('.$content.');';
 		}
+		
+		return $content;
+	}
+
+	protected function encodeVars()
+	{
+		if (!isset($this->viewVars['_serialize'])) {
+			$serialize = array_keys($this->viewVars);
+		}
+		
+		if (is_array($serialize)) {
+			$data = array();
+			foreach ($serialize as $key) {
+				$data[$key] = $this->viewVars[$key];
+			}
+		} else {
+			$data = isset($this->viewVars[$serialize]) ? $this->viewVars[$serialize] : null;
+		}
+		$content = json_encode($data);
+		$this->Blocks->set('content', $content);
+		return $content;
+	}
+	
+	protected function renderView($view, $layout)
+	{
 		if ($view !== false && $viewFileName = $this->_getViewFileName($view)) {
 			if (!$this->_helpersLoaded) {
 				$this->loadHelpers();
@@ -104,5 +121,4 @@ class JsonView extends View {
 			return $content;
 		}
 	}
-
 }
