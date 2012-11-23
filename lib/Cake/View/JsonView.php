@@ -62,6 +62,7 @@ class JsonView extends View {
  *
  * @param Controller $controller
  */
+
 	public function __construct(Controller $controller = null) {
 		parent::__construct($controller);
 		if (isset($controller->response) && $controller->response instanceof CakeResponse) {
@@ -82,21 +83,20 @@ class JsonView extends View {
  * @return string The rendered view.
  */
 	public function render($view = null, $layout = null) {
-		$content = $this->useViews ? $this->renderView($view, layout) : $this->encodeVars();
-		
+		$content = $this->useViews ? $this->_renderView($view, $layout) : $this->_encodeVars();
+
 		if (isset($this->request->query['callback'])) {
-			$content = $this->request->query['callback'].'('.$content.');';
+			$content = $this->request->query['callback'] . '(' . $content . ');';
 		}
-		
+
 		return $content;
 	}
 
-	protected function encodeVars()
-	{
+	protected function _encodeVars() {
 		if (!isset($this->viewVars['_serialize'])) {
 			$serialize = array_keys($this->viewVars);
 		}
-		
+
 		if (is_array($serialize)) {
 			$data = array();
 			foreach ($serialize as $key) {
@@ -105,13 +105,13 @@ class JsonView extends View {
 		} else {
 			$data = isset($this->viewVars[$serialize]) ? $this->viewVars[$serialize] : null;
 		}
+
 		$content = json_encode($data);
 		$this->Blocks->set('content', $content);
 		return $content;
 	}
-	
-	protected function renderView($view, $layout)
-	{
+
+	protected function _renderView($view, $layout) {
 		if ($view !== false && $viewFileName = $this->_getViewFileName($view)) {
 			if (!$this->_helpersLoaded) {
 				$this->loadHelpers();
